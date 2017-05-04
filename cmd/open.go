@@ -29,7 +29,7 @@ func open(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(selectedLines) == 0 {
-		return errors.New("No gist selected")
+		return errors.New("no page selected")
 	}
 
 	line, err := cli.ParseLine(selectedLines[0])

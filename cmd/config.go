@@ -3,8 +3,8 @@ package cmd
 import (
 	"path/filepath"
 
-	"github.com/b4b4r07/gist/config"
-	"github.com/b4b4r07/gist/util"
+	"github.com/b4b4r07/crowi/config"
+	"github.com/b4b4r07/crowi/util"
 	"github.com/spf13/cobra"
 )
 

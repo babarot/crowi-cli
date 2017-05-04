@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/b4b4r07/gist/config"
+	"github.com/b4b4r07/crowi/config"
 	"github.com/spf13/cobra"
 )
 

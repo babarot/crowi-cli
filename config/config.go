@@ -10,44 +10,15 @@ import (
 )
 
 type Config struct {
-	Core   Core
-	Gist   Gist
-	Flag   Flag
-	Screen Screen
+	Core Core
 }
 
 type Core struct {
-	Editor        string `toml:"editor"`
-	SelectCmd     string `toml:"selectcmd"`
-	TomlFile      string `toml:"tomlfile"`
-	User          string `toml:"user"`
-	ShowIndicator bool   `toml:"show_indicator"`
-	BaseURL       string `toml:"base_url"`
-}
-
-type Gist struct {
-	Token string `toml:"token"`
-	Dir   string `toml:"dir"`
-}
-
-type Flag struct {
-	ShowSpinner bool `toml:"show_spinner"`
-	Verbose     bool `toml:"verbose"`
-	OpenURL     bool `toml:"open_url"`
-	NewPrivate  bool `toml:"new_private"`
-	OpenBaseURL bool `toml:"open_base_url"`
-
-	// TODO
-	Sort string `toml:"sort"`
-	Only string `toml:"only"`
-
-	EditDesc         bool
-	OpenStarredItems bool
-	FromClipboard    bool
-}
-
-type Screen struct {
-	ShowPrivateSymbol bool `toml:"show_private_symbol"`
+	Token     string `toml:"token"`
+	BaseURL   string `toml:"base_url"`
+	Editor    string `toml:"editor"`
+	TomlFile  string `toml:"toml_file"`
+	SelectCmd string `toml:"selectcmd"`
 }
 
 var Conf Config
@@ -64,7 +35,7 @@ func GetDefaultDir() (string, error) {
 			dir = filepath.Join(os.Getenv("USERPROFILE"), "Application Data")
 		}
 	}
-	dir = filepath.Join(dir, "gist")
+	dir = filepath.Join(dir, "crowi")
 
 	err := os.MkdirAll(dir, 0700)
 	if err != nil {
@@ -92,25 +63,11 @@ func (cfg *Config) LoadFile(file string) error {
 		return err
 	}
 
-	cfg.Gist.Token = os.Getenv("GITHUB_TOKEN")
-	cfg.Core.Editor = os.Getenv("EDITOR")
-	if cfg.Core.Editor == "" {
-		cfg.Core.Editor = "vim"
-	}
-	cfg.Core.SelectCmd = "fzf-tmux --multi:fzf --multi:peco"
+	cfg.Core.Token = os.Getenv("CROWI_ACCESS_TOKEN")
+	cfg.Core.BaseURL = "https://wiki.your.domain"
+	cfg.Core.Editor = "vim"
 	cfg.Core.TomlFile = file
-	cfg.Core.User = os.Getenv("USER")
-	cfg.Core.ShowIndicator = true
-	cfg.Core.BaseURL = "https://gist.github.com"
-	dir := filepath.Join(filepath.Dir(file), "files")
-	os.MkdirAll(dir, 0700)
-	cfg.Gist.Dir = dir
-	cfg.Flag.ShowSpinner = true
-	cfg.Flag.Verbose = true
-	cfg.Flag.OpenURL = false
-	cfg.Flag.NewPrivate = false
-	cfg.Flag.OpenBaseURL = false
-	cfg.Screen.ShowPrivateSymbol = false
+	cfg.Core.SelectCmd = "fzf"
 
 	return toml.NewEncoder(f).Encode(cfg)
 }

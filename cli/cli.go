@@ -14,7 +14,7 @@ type Screen struct {
 }
 
 func NewScreen() (*Screen, error) {
-	client, err := crowi.NewClient(config.Conf.Core.BaseURL, config.Conf.Gist.Token)
+	client, err := crowi.NewClient(config.Conf.Core.BaseURL, config.Conf.Core.Token)
 	if err != nil {
 		return &Screen{}, err
 	}
@@ -22,7 +22,9 @@ func NewScreen() (*Screen, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	res, err := client.PagesList(ctx, "", "b4b4r07")
+	res, err := client.PagesList(ctx, "", "b4b4r07", crowi.ListOptions{
+		Pagenation: true,
+	})
 	if err != nil {
 		return &Screen{}, err
 	}
@@ -38,11 +40,9 @@ func NewScreen() (*Screen, error) {
 }
 
 type Crowi struct {
-	PageID string
-	Path   string
-	Author string
+	Path string
 }
 
 func ParseLine(line string) (*Crowi, error) {
-	return &Crowi{}, nil
+	return &Crowi{Path: line}, nil
 }

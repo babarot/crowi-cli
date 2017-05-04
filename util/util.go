@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/Songmu/strrand"
-	"github.com/b4b4r07/gist/config"
+	"github.com/b4b4r07/crowi/config"
 	"github.com/b4b4r07/go-colon"
 	"github.com/chzyer/readline"
 	"github.com/fatih/color"
@@ -76,14 +76,23 @@ func Filter(text string) ([]string, error) {
 	if text == "" {
 		return selectedLines, errors.New("No input")
 	}
-	err = runFilter(config.Conf.Core.SelectCmd, strings.NewReader(text), &buf)
+	selecter := config.Conf.Core.SelectCmd
+	if selecter == "" {
+		return selectedLines, errors.New("no selectcmd specified")
+	}
+	err = runFilter(selecter, strings.NewReader(text), &buf)
 	if err != nil {
 		return selectedLines, err
 	}
 	if buf.Len() == 0 {
 		return selectedLines, errors.New("no lines selected")
 	}
-	selectedLines = strings.Split(buf.String(), "\n")
+	for _, line := range strings.Split(buf.String(), "\n") {
+		if line == "" {
+			continue
+		}
+		selectedLines = append(selectedLines, line)
+	}
 	return selectedLines, nil
 }
 

@@ -36,3 +36,13 @@ func NewScreen() (*Screen, error) {
 		Text: text,
 	}, nil
 }
+
+type Crowi struct {
+	PageID string
+	Path   string
+	Author string
+}
+
+func ParseLine(line string) (*Crowi, error) {
+	return &Crowi{}, nil
+}

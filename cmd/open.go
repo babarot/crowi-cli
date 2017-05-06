@@ -2,10 +2,8 @@ package cmd
 
 import (
 	"errors"
-	"path"
 
 	"github.com/b4b4r07/crowi/cli"
-	"github.com/b4b4r07/crowi/config"
 	"github.com/b4b4r07/crowi/util"
 	"github.com/spf13/cobra"
 )
@@ -37,8 +35,7 @@ func open(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	url := path.Join(config.Conf.Core.BaseURL, line.Path)
-	return util.Open(url)
+	return util.Open(line.URL)
 }
 
 func init() {

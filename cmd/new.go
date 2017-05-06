@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/b4b4r07/crowi/cli"
 	"github.com/b4b4r07/crowi/config"
 	"github.com/b4b4r07/crowi/util"
-	"github.com/crowi/go-crowi"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -33,7 +33,7 @@ func new(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	client, err := crowi.NewClient(config.Conf.Core.BaseURL, config.Conf.Core.Token)
+	client, err := cli.GetClient()
 	if err != nil {
 		return err
 	}

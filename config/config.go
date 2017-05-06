@@ -10,16 +10,20 @@ import (
 )
 
 type Config struct {
-	Core Core
+	Core  CoreConfig
+	Crowi CrowiConfig
 }
 
-type Core struct {
-	Token     string `toml:"token"`
-	BaseURL   string `toml:"base_url"`
+type CoreConfig struct {
 	Editor    string `toml:"editor"`
 	TomlFile  string `toml:"toml_file"`
 	SelectCmd string `toml:"selectcmd"`
-	User      string `toml:"user"`
+}
+
+type CrowiConfig struct {
+	Token   string `toml:"token"`
+	BaseURL string `toml:"base_url"`
+	User    string `toml:"user"`
 }
 
 var Conf Config
@@ -64,12 +68,12 @@ func (cfg *Config) LoadFile(file string) error {
 		return err
 	}
 
-	cfg.Core.Token = os.Getenv("CROWI_ACCESS_TOKEN")
-	cfg.Core.BaseURL = "https://wiki.your.domain"
 	cfg.Core.Editor = os.Getenv("EDITOR")
 	cfg.Core.TomlFile = file
 	cfg.Core.SelectCmd = "fzf"
-	cfg.Core.User = os.Getenv("USER")
+	cfg.Crowi.Token = os.Getenv("CROWI_ACCESS_TOKEN")
+	cfg.Crowi.BaseURL = "https://wiki.your.domain"
+	cfg.Crowi.User = os.Getenv("USER")
 
 	return toml.NewEncoder(f).Encode(cfg)
 }

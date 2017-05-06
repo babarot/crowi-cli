@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/b4b4r07/crowi/config"
+	"github.com/b4b4r07/crowi/util"
 	"github.com/crowi/go-crowi"
 )
 
@@ -48,6 +49,23 @@ func NewScreen() (*Screen, error) {
 	return &Screen{
 		Text: text,
 	}, nil
+}
+
+func (s *Screen) Filter() (selectedLines []string, err error) {
+	lines, err := util.Filter(s.Text)
+	if err != nil {
+		return
+	}
+	for _, line := range lines {
+		if line == "" {
+			continue
+		}
+		selectedLines = append(selectedLines, line)
+	}
+	if len(selectedLines) == 0 {
+		return []string{}, errors.New("no lines selected")
+	}
+	return
 }
 
 type Crowi struct {

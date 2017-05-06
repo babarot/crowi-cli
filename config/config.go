@@ -19,6 +19,7 @@ type Core struct {
 	Editor    string `toml:"editor"`
 	TomlFile  string `toml:"toml_file"`
 	SelectCmd string `toml:"selectcmd"`
+	User      string `toml:"user"`
 }
 
 var Conf Config
@@ -65,9 +66,10 @@ func (cfg *Config) LoadFile(file string) error {
 
 	cfg.Core.Token = os.Getenv("CROWI_ACCESS_TOKEN")
 	cfg.Core.BaseURL = "https://wiki.your.domain"
-	cfg.Core.Editor = "vim"
+	cfg.Core.Editor = os.Getenv("EDITOR")
 	cfg.Core.TomlFile = file
 	cfg.Core.SelectCmd = "fzf"
+	cfg.Core.User = os.Getenv("USER")
 
 	return toml.NewEncoder(f).Encode(cfg)
 }

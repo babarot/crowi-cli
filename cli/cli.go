@@ -2,6 +2,7 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -22,8 +23,13 @@ func NewScreen() (*Screen, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	res, err := client.PagesList(ctx, "", "b4b4r07", crowi.ListOptions{
-		Pagenation: true,
+	user := config.Conf.Core.User
+	if user == "" {
+		return &Screen{}, errors.New("user is not defined")
+	}
+
+	res, err := client.Pages.List(ctx, "", user, &crowi.PagesListOptions{
+		crowi.ListOptions{Pagenation: true},
 	})
 	if err != nil {
 		return &Screen{}, err

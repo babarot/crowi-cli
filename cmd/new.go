@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/b4b4r07/crowi/config"
@@ -21,15 +23,12 @@ var newCmd = &cobra.Command{
 	RunE:  new,
 }
 
-type gistItem struct {
+type page struct {
 	path, body string
 }
 
 func new(cmd *cobra.Command, args []string) error {
-	var err error
-	var gi gistItem
-
-	gi, err = makeFromEditor()
+	p, err := makeFromEditor()
 	if err != nil {
 		return err
 	}
@@ -42,29 +41,45 @@ func new(cmd *cobra.Command, args []string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	res, err := client.PagesCreate(ctx, gi.path, gi.body)
+	res, err := client.Pages.Create(ctx, p.path, p.body)
 	if err != nil {
 		return err
+	}
+
+	if !res.OK {
+		return errors.New(res.Error)
 	}
 
 	util.Underline("Created", res.Page.ID)
 	return nil
 }
 
-func makeFromEditor() (gi gistItem, err error) {
-	util.ScanDefaultString = fmt.Sprintf("/user/%s/memo/%s/", os.Getenv("USER"), time.Now().Format("2006/01/02"))
-	filename, err := util.Scan(color.YellowString("Filename> "), !util.ScanAllowEmpty)
+func makeFromEditor() (p page, err error) {
+	util.ScanDefaultString = fmt.Sprintf(
+		"/user/%s/memo/%s/",
+		os.Getenv("USER"), time.Now().Format("2006/01/02"),
+	)
+
+	path, err := util.Scan(color.YellowString("Path> "), !util.ScanAllowEmpty)
 	if err != nil {
 		return
 	}
-	f, err := util.TempFile(filepath.Base(filename))
+	if !filepath.HasPrefix(path, "/") {
+		return page{}, errors.New("invalid format")
+	}
+	// Do not make it a portal page
+	path = strings.TrimSuffix(path, "/")
+
+	f, err := util.TempFile(filepath.Base(path))
 	defer os.Remove(f.Name())
+
 	err = util.RunCommand(config.Conf.Core.Editor, f.Name())
 	if err != nil {
 		return
 	}
-	return gistItem{
-		path: filename,
+
+	return page{
+		path: path,
 		body: util.FileContent(f.Name()),
 	}, nil
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/b4b4r07/crowi/api"
 	"github.com/b4b4r07/crowi/cli"
-	"github.com/b4b4r07/crowi/util"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
 )
@@ -41,17 +40,17 @@ func new(cmd *cobra.Command, args []string) error {
 		return errors.New(res.Error)
 	}
 
-	util.Underline("Created", res.Page.ID)
+	cli.Underline("Created", res.Page.ID)
 	return nil
 }
 
 func makeFromEditor() (p page, err error) {
-	util.ScanDefaultString = fmt.Sprintf(
+	cli.ScanDefaultString = fmt.Sprintf(
 		"/user/%s/memo/%s/",
 		os.Getenv("USER"), time.Now().Format("2006/01/02"),
 	)
 
-	path, err := util.Scan(color.YellowString("Path> "), !util.ScanAllowEmpty)
+	path, err := cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
 	if err != nil {
 		return
 	}
@@ -61,17 +60,17 @@ func makeFromEditor() (p page, err error) {
 	// Do not make it a portal page
 	path = strings.TrimSuffix(path, "/")
 
-	f, err := util.TempFile(filepath.Base(path))
+	f, err := cli.TempFile(filepath.Base(path))
 	defer os.Remove(f.Name())
 
-	err = util.RunCommand(cli.Conf.Core.Editor, f.Name())
+	err = cli.Run(cli.Conf.Core.Editor, f.Name())
 	if err != nil {
 		return
 	}
 
 	return page{
 		path: path,
-		body: util.FileContent(f.Name()),
+		body: cli.FileContent(f.Name()),
 	}, nil
 }
 

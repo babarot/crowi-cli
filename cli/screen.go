@@ -7,7 +7,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/b4b4r07/crowi/util"
 	"github.com/briandowns/spinner"
 	"github.com/crowi/go-crowi"
 )
@@ -61,7 +60,7 @@ func NewScreen() (*Screen, error) {
 }
 
 func (s *Screen) Filter() (selectedLines []string, err error) {
-	lines, err := util.Filter(Conf.Core.SelectCmd, s.Text)
+	lines, err := Filter(Conf.Core.SelectCmd, s.Text)
 	if err != nil {
 		return
 	}

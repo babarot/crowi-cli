@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"github.com/b4b4r07/crowi/cli"
-	"github.com/b4b4r07/crowi/util"
 	"github.com/spf13/cobra"
 )
 
@@ -29,7 +28,7 @@ func open(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return util.Open(line.URL)
+	return cli.OpenURL(line.URL)
 }
 
 func init() {

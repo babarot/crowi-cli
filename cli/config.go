@@ -21,9 +21,10 @@ type CoreConfig struct {
 }
 
 type CrowiConfig struct {
-	Token   string `toml:"token"`
-	BaseURL string `toml:"base_url"`
-	User    string `toml:"user"`
+	Token     string `toml:"token"`
+	BaseURL   string `toml:"base_url"`
+	User      string `toml:"user"`
+	LocalPath string `toml:"local_path"`
 }
 
 var Conf Config
@@ -68,12 +69,18 @@ func (cfg *Config) LoadFile(file string) error {
 		return err
 	}
 
+	dir, err := GetDefaultDir()
+	if err != nil {
+		return err
+	}
+
 	cfg.Core.Editor = os.Getenv("EDITOR")
 	cfg.Core.TomlFile = file
 	cfg.Core.SelectCmd = "fzf"
 	cfg.Crowi.Token = os.Getenv("CROWI_ACCESS_TOKEN")
 	cfg.Crowi.BaseURL = "https://wiki.your.domain"
 	cfg.Crowi.User = os.Getenv("USER")
+	cfg.Crowi.LocalPath = filepath.Join(dir, "pages")
 
 	return toml.NewEncoder(f).Encode(cfg)
 }

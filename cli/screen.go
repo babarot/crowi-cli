@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/crowi/go-crowi"
@@ -12,6 +13,7 @@ import (
 
 type Screen struct {
 	Text string
+	IDs  map[string]string
 }
 
 func NewScreen() (*Screen, error) {
@@ -44,12 +46,15 @@ func NewScreen() (*Screen, error) {
 	}
 
 	text := ""
+	ids := make(map[string]string, len(res.Pages))
 	for _, page := range res.Pages {
 		text += fmt.Sprintf("%s\n", page.Path)
+		ids[page.Path] = page.ID
 	}
 
 	return &Screen{
 		Text: text,
+		IDs:  ids,
 	}, nil
 }
 
@@ -71,12 +76,17 @@ func (s *Screen) Filter() (selectedLines []string, err error) {
 }
 
 type Page struct {
-	Path, URL string
+	Path      string
+	URL       string
+	LocalPath string
+	ID        string
 }
 
-func ParseLine(line string) (*Page, error) {
+func (s *Screen) ParseLine(line string) (*Page, error) {
 	return &Page{
-		Path: line,
-		URL:  path.Join(Conf.Crowi.BaseURL, line),
+		Path:      line,
+		URL:       path.Join(Conf.Crowi.BaseURL, line),
+		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.IDs[line]),
+		ID:        s.IDs[line],
 	}, nil
 }

@@ -8,7 +8,7 @@ import (
 	"github.com/crowi/go-crowi"
 )
 
-func PagesCreate(path, body string) (*crowi.Page, error) {
+func CreatePage(path, body string) (*crowi.Page, error) {
 	s := cli.NewSpinner("Posting")
 	s.Start()
 	defer s.Stop()
@@ -22,4 +22,9 @@ func PagesCreate(path, body string) (*crowi.Page, error) {
 	defer cancel()
 
 	return client.Pages.Create(ctx, path, body)
+}
+
+func EditPage(path string) error {
+	println(path)
+	return nil
 }

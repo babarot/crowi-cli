@@ -16,8 +16,8 @@ import (
 
 var newCmd = &cobra.Command{
 	Use:   "new [FILE/DIR]",
-	Short: "Create a new gist",
-	Long:  `Create a new gist. If you pass file/dir paths, upload those files`,
+	Short: "Create a new page",
+	Long:  `Create a new page`,
 	RunE:  new,
 }
 
@@ -31,7 +31,7 @@ func new(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := api.PagesCreate(p.path, p.body)
+	res, err := api.CreatePage(p.path, p.body)
 	if err != nil {
 		return err
 	}

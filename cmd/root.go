@@ -15,9 +15,9 @@ const Version = "0.1.2"
 var showVersion bool
 
 var RootCmd = &cobra.Command{
-	Use:           "gist",
-	Short:         "gist editor",
-	Long:          "gist - A simple gist editor for CLI",
+	Use:           "crowi",
+	Short:         "crowi command-line interface",
+	Long:          "crowi - A simple Crowi editor for CLI",
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Run: func(cmd *cobra.Command, args []string) {

@@ -7,7 +7,6 @@ import (
 	"path"
 	"time"
 
-	"github.com/briandowns/spinner"
 	"github.com/crowi/go-crowi"
 )
 
@@ -15,13 +14,8 @@ type Screen struct {
 	Text string
 }
 
-var (
-	SpinnerSymbol int = 14
-)
-
 func NewScreen() (*Screen, error) {
-	s := spinner.New(spinner.CharSets[SpinnerSymbol], 100*time.Millisecond)
-	s.Suffix = " Fetching..."
+	s := NewSpinner("Fetching")
 	s.Start()
 	defer s.Stop()
 

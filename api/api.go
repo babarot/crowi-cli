@@ -9,6 +9,10 @@ import (
 )
 
 func PagesCreate(path, body string) (*crowi.Page, error) {
+	s := cli.NewSpinner("Posting")
+	s.Start()
+	defer s.Stop()
+
 	client, err := cli.GetClient()
 	if err != nil {
 		return &crowi.Page{}, err

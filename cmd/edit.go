@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"github.com/b4b4r07/crowi/api"
 	"github.com/b4b4r07/crowi/cli"
 	"github.com/spf13/cobra"
 )
@@ -28,7 +27,7 @@ func edit(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	return api.EditPage(line.LocalPath)
+	return cli.EditPage(screen.Pages, line)
 }
 
 func init() {

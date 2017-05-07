@@ -2,29 +2,32 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"time"
 
-	"github.com/b4b4r07/crowi/cli"
 	"github.com/crowi/go-crowi"
 )
 
-func CreatePage(path, body string) (*crowi.Page, error) {
-	s := cli.NewSpinner("Posting")
+func CreatePage(cli *crowi.Client, path, body string) (*crowi.Page, error) {
+	s := NewSpinner("Posting")
 	s.Start()
 	defer s.Stop()
-
-	client, err := cli.GetClient()
-	if err != nil {
-		return &crowi.Page{}, err
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	return client.Pages.Create(ctx, path, body)
+	return cli.Pages.Create(ctx, path, body)
 }
 
-func EditPage(path string) error {
-	println(path)
+// func upload() error
+// func download() error
+
+type PageData struct {
+	Page      crowi.PageInfo
+	LocalPath string
+}
+
+func SyncPage(data PageData) error {
+	fmt.Printf("Synced %#v\n", data.Page)
 	return nil
 }

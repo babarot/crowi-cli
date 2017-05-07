@@ -8,16 +8,18 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/b4b4r07/crowi/api" // TODO (spinner)
 	"github.com/crowi/go-crowi"
 )
 
 type Screen struct {
-	Text string
-	IDs  map[string]string
+	Text  string
+	IDs   map[string]string
+	Pages *crowi.Pages
 }
 
 func NewScreen() (*Screen, error) {
-	s := NewSpinner("Fetching")
+	s := api.NewSpinner("Fetching")
 	s.Start()
 	defer s.Stop()
 
@@ -53,8 +55,9 @@ func NewScreen() (*Screen, error) {
 	}
 
 	return &Screen{
-		Text: text,
-		IDs:  ids,
+		Text:  text,
+		IDs:   ids,
+		Pages: res,
 	}, nil
 }
 
@@ -75,15 +78,15 @@ func (s *Screen) Filter() (selectedLines []string, err error) {
 	return
 }
 
-type Page struct {
+type Line struct {
 	Path      string
 	URL       string
 	LocalPath string
 	ID        string
 }
 
-func (s *Screen) ParseLine(line string) (*Page, error) {
-	return &Page{
+func (s *Screen) ParseLine(line string) (*Line, error) {
+	return &Line{
 		Path:      line,
 		URL:       path.Join(Conf.Crowi.BaseURL, line),
 		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.IDs[line]),

@@ -31,7 +31,12 @@ func new(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := api.CreatePage(p.path, p.body)
+	client, err := cli.GetClient()
+	if err != nil {
+		return err
+	}
+
+	res, err := api.CreatePage(client, p.path, p.body)
 	if err != nil {
 		return err
 	}

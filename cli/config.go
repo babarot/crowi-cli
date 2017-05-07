@@ -82,5 +82,7 @@ func (cfg *Config) LoadFile(file string) error {
 	cfg.Crowi.User = os.Getenv("USER")
 	cfg.Crowi.LocalPath = filepath.Join(dir, "pages")
 
+	os.MkdirAll(cfg.Crowi.LocalPath, 0700)
+
 	return toml.NewEncoder(f).Encode(cfg)
 }

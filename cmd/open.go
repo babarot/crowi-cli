@@ -18,17 +18,13 @@ func open(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	selectedLines, err := screen.Filter()
+	lines, err := screen.Select()
 	if err != nil {
 		return err
 	}
 
-	line, err := screen.ParseLine(selectedLines[0])
-	if err != nil {
-		return err
-	}
-
-	return cli.OpenURL(line.URL)
+	// TODO: lines (range)
+	return cli.OpenURL(lines[0].URL)
 }
 
 func init() {

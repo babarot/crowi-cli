@@ -69,23 +69,6 @@ func NewScreen() (*Screen, error) {
 	}, nil
 }
 
-func (s *Screen) Filter() (selectedLines []string, err error) {
-	lines, err := Filter(Conf.Core.SelectCmd, s.Text)
-	if err != nil {
-		return
-	}
-	for _, line := range lines {
-		if line == "" {
-			continue
-		}
-		selectedLines = append(selectedLines, line)
-	}
-	if len(selectedLines) == 0 {
-		return []string{}, errors.New("no lines selected")
-	}
-	return
-}
-
 type Line struct {
 	Path      string
 	URL       string
@@ -93,11 +76,31 @@ type Line struct {
 	LocalPath string
 }
 
-func (s *Screen) ParseLine(line string) (*Line, error) {
+type Lines []Line
+
+func (s *Screen) parseLine(line string) *Line {
 	return &Line{
 		Path:      line,
 		URL:       path.Join(Conf.Crowi.BaseURL, line),
 		ID:        s.ID(line),
 		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)),
-	}, nil
+	}
+}
+
+func (s *Screen) Select() (lines Lines, err error) {
+	selectedLines, err := Filter(Conf.Core.SelectCmd, s.Text)
+	if err != nil {
+		return
+	}
+	for _, line := range selectedLines {
+		if line == "" {
+			continue
+		}
+		parsedLine := s.parseLine(line)
+		lines = append(lines, *parsedLine)
+	}
+	if len(lines) == 0 {
+		return lines, errors.New("no lines selected")
+	}
+	return
 }

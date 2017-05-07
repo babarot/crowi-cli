@@ -16,7 +16,7 @@ func GetClient() (*crowi.Client, error) {
 		})
 }
 
-func EditPage(res *crowi.Pages, line *Line) error {
+func EditPage(res *crowi.Pages, line Line) error {
 	var (
 		err  error
 		page crowi.PageInfo

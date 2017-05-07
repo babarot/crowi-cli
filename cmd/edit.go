@@ -17,17 +17,13 @@ func edit(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	selectedLines, err := screen.Filter()
+	lines, err := screen.Select()
 	if err != nil {
 		return err
 	}
 
-	line, err := screen.ParseLine(selectedLines[0])
-	if err != nil {
-		return err
-	}
-
-	return cli.EditPage(screen.Pages, line)
+	// TODO: lines (range)
+	return cli.EditPage(screen.Pages, lines[0])
 }
 
 func init() {

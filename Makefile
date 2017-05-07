@@ -5,10 +5,10 @@ all: build
 
 build: deps
 	mkdir -p bin
-	go build -o bin/gist
+	go build -o bin/crowi
 
 install: build
-	install -m 755 ./bin/gist ~/bin/gist
+	install -m 755 ./bin/crowi ~/bin/crowi
 
 deps:
 	go get github.com/golang/dep/...

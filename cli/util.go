@@ -36,7 +36,7 @@ func Scan(message string, allowEmpty bool) (string, error) {
 	}
 	l, err := readline.NewEx(&readline.Config{
 		Prompt:            message,
-		HistoryFile:       filepath.Join(tmp, "gist.txt"),
+		HistoryFile:       filepath.Join(tmp, "crowi.txt"),
 		InterruptPrompt:   "^C",
 		EOFPrompt:         "exit",
 		HistorySearchFold: true,

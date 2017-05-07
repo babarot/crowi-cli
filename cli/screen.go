@@ -7,8 +7,8 @@ import (
 	"path"
 	"time"
 
-	"github.com/b4b4r07/crowi/config"
 	"github.com/b4b4r07/crowi/util"
+	"github.com/briandowns/spinner"
 	"github.com/crowi/go-crowi"
 )
 
@@ -16,7 +16,16 @@ type Screen struct {
 	Text string
 }
 
+var (
+	SpinnerSymbol int = 14
+)
+
 func NewScreen() (*Screen, error) {
+	s := spinner.New(spinner.CharSets[SpinnerSymbol], 100*time.Millisecond)
+	s.Suffix = " Fetching..."
+	s.Start()
+	defer s.Stop()
+
 	client, err := GetClient()
 	if err != nil {
 		return &Screen{}, err
@@ -25,7 +34,7 @@ func NewScreen() (*Screen, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	user := config.Conf.Crowi.User
+	user := Conf.Crowi.User
 	if user == "" {
 		return &Screen{}, errors.New("user is not defined")
 	}
@@ -52,7 +61,7 @@ func NewScreen() (*Screen, error) {
 }
 
 func (s *Screen) Filter() (selectedLines []string, err error) {
-	lines, err := util.Filter(s.Text)
+	lines, err := util.Filter(Conf.Core.SelectCmd, s.Text)
 	if err != nil {
 		return
 	}
@@ -68,13 +77,13 @@ func (s *Screen) Filter() (selectedLines []string, err error) {
 	return
 }
 
-type Crowi struct {
+type Page struct {
 	Path, URL string
 }
 
-func ParseLine(line string) (*Crowi, error) {
-	return &Crowi{
+func ParseLine(line string) (*Page, error) {
+	return &Page{
 		Path: line,
-		URL:  path.Join(config.Conf.Crowi.BaseURL, line),
+		URL:  path.Join(Conf.Crowi.BaseURL, line),
 	}, nil
 }

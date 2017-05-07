@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -9,8 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/b4b4r07/crowi/api"
 	"github.com/b4b4r07/crowi/cli"
-	"github.com/b4b4r07/crowi/config"
 	"github.com/b4b4r07/crowi/util"
 	"github.com/fatih/color"
 	"github.com/spf13/cobra"
@@ -33,15 +32,7 @@ func new(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	client, err := cli.GetClient()
-	if err != nil {
-		return err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
-	res, err := client.Pages.Create(ctx, p.path, p.body)
+	res, err := api.PagesCreate(p.path, p.body)
 	if err != nil {
 		return err
 	}
@@ -73,7 +64,7 @@ func makeFromEditor() (p page, err error) {
 	f, err := util.TempFile(filepath.Base(path))
 	defer os.Remove(f.Name())
 
-	err = util.RunCommand(config.Conf.Core.Editor, f.Name())
+	err = util.RunCommand(cli.Conf.Core.Editor, f.Name())
 	if err != nil {
 		return
 	}

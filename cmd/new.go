@@ -2,8 +2,8 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"time"
@@ -51,25 +51,32 @@ func new(cmd *cobra.Command, args []string) error {
 }
 
 func makeFromEditor() (p page, err error) {
-	cli.ScanDefaultString = fmt.Sprintf(
-		"/user/%s/memo/%s/",
-		os.Getenv("USER"), time.Now().Format("2006/01/02"),
-	)
+	user := cli.Conf.Crowi.User
+	if user == "" {
+		return p, errors.New("config user not defined")
+	}
+	cli.ScanDefaultString = path.Join(
+		"/user", user, "memo", time.Now().Format("2006/01/02"),
+	) + "/"
 
 	path, err := cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
 	if err != nil {
 		return
 	}
 	if !filepath.HasPrefix(path, "/") {
-		return page{}, errors.New("invalid format")
+		return page{}, errors.New("path: it must start with a slash")
 	}
 	// Do not make it a portal page
 	path = strings.TrimSuffix(path, "/")
 
-	f, err := cli.TempFile(filepath.Base(path) + ".md")
+	f, err := cli.TempFile(filepath.Base(path) + cli.Extention)
 	defer os.Remove(f.Name())
 
-	err = cli.Run(cli.Conf.Core.Editor, f.Name())
+	editor := cli.Conf.Core.Editor
+	if editor == "" {
+		return p, errors.New("config editor not defined")
+	}
+	err = cli.Run(editor, f.Name())
 	if err != nil {
 		return
 	}

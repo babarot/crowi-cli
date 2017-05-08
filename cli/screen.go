@@ -14,6 +14,8 @@ import (
 	"github.com/crowi/go-crowi"
 )
 
+var Extention string = ".md"
+
 type Screen struct {
 	Text  string
 	ID    func(string) string
@@ -84,7 +86,7 @@ func (s *Screen) parseLine(line string) *Line {
 		Path:      line,
 		URL:       path.Join(Conf.Crowi.BaseURL, line),
 		ID:        s.ID(line),
-		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)+".md"),
+		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)+Extention),
 	}
 }
 

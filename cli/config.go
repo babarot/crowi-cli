@@ -25,6 +25,7 @@ type CrowiConfig struct {
 	BaseURL   string `toml:"base_url"`
 	User      string `toml:"user"`
 	LocalPath string `toml:"local_path"`
+	Paging    bool   `toml:"paging"`
 }
 
 var Conf Config

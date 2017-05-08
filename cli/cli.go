@@ -22,6 +22,11 @@ func EditPage(res *crowi.Pages, line Line) error {
 		page crowi.PageInfo
 	)
 
+	client, err := GetClient()
+	if err != nil {
+		return err
+	}
+
 	for _, pageInfo := range res.Pages {
 		if pageInfo.ID == line.ID {
 			page = pageInfo
@@ -31,10 +36,11 @@ func EditPage(res *crowi.Pages, line Line) error {
 	data := api.PageData{
 		Page:      page,
 		LocalPath: line.LocalPath,
+		Client:    client,
 	}
 
 	// sync before editing
-	err = api.SyncPage(data)
+	err = data.SyncPage()
 	if err != nil {
 		return err
 	}
@@ -43,11 +49,10 @@ func EditPage(res *crowi.Pages, line Line) error {
 	if editor == "" {
 		return errors.New("config editor not set")
 	}
-	err = Run(editor, line.LocalPath)
-	if err != nil {
+	if err = Run(editor, line.LocalPath); err != nil {
 		return err
 	}
 
 	// sync after editing
-	return api.SyncPage(data)
+	return data.SyncPage()
 }

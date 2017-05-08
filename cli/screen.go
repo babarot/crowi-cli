@@ -39,7 +39,7 @@ func NewScreen() (*Screen, error) {
 	}
 
 	res, err := client.Pages.List(ctx, "", user, &crowi.PagesListOptions{
-		crowi.ListOptions{Pagenation: true},
+		crowi.ListOptions{Pagenation: Conf.Crowi.Paging},
 	})
 	if err != nil {
 		return &Screen{}, err
@@ -85,7 +85,7 @@ func (s *Screen) parseLine(line string) *Line {
 		Path:      line,
 		URL:       path.Join(Conf.Crowi.BaseURL, line),
 		ID:        s.ID(line),
-		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)),
+		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)+".md"),
 	}
 }
 

@@ -7,8 +7,8 @@ import (
 
 var editCmd = &cobra.Command{
 	Use:   "edit",
-	Short: "edit",
-	Long:  `edit`,
+	Short: "Edit a page",
+	Long:  `Edit a page`,
 	RunE:  edit,
 }
 

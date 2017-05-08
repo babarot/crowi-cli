@@ -2,13 +2,20 @@ package api
 
 import (
 	"context"
-	"fmt"
+	"io/ioutil"
+	"os"
 	"time"
 
 	"github.com/crowi/go-crowi"
 )
 
-func CreatePage(cli *crowi.Client, path, body string) (*crowi.Page, error) {
+type PageData struct {
+	Page      crowi.PageInfo
+	LocalPath string
+	Client    *crowi.Client
+}
+
+func (pd PageData) CreatePage(path, body string) (*crowi.Page, error) {
 	s := NewSpinner("Posting...")
 	s.Start()
 	defer s.Stop()
@@ -16,18 +23,115 @@ func CreatePage(cli *crowi.Client, path, body string) (*crowi.Page, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	return cli.Pages.Create(ctx, path, body)
+	return pd.Client.Pages.Create(ctx, path, body)
 }
 
-// func upload() error
-// func download() error
-
-type PageData struct {
-	Page      crowi.PageInfo
-	LocalPath string
+func fileContent(fname string) string {
+	data, err := ioutil.ReadFile(fname)
+	if err != nil {
+		panic(err)
+	}
+	return string(data)
 }
 
-func SyncPage(data PageData) error {
-	fmt.Printf("Synced %#v\n", data.Page)
-	return nil
+type (
+	uploaded   bool
+	downloaded bool
+)
+
+func (pd PageData) upload() (done uploaded, err error) {
+	s := NewSpinner("Uploading...")
+	s.Start()
+	defer s.Stop()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	res, err := pd.Client.Pages.Get(ctx, pd.Page.Path)
+	if err != nil {
+		return
+	}
+
+	remoteBody := res.Page.Revision.Body
+	localBody := fileContent(pd.LocalPath)
+
+	if remoteBody == localBody {
+		// do nothing
+		return
+	}
+
+	_, err = pd.Client.Pages.Update(ctx, pd.Page.ID, localBody)
+	return uploaded(true), err
+}
+
+func (pd PageData) download() (done downloaded, err error) {
+	s := NewSpinner("Downloading...")
+	s.Start()
+	defer s.Stop()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+
+	res, err := pd.Client.Pages.Get(ctx, pd.Page.Path)
+	if err != nil {
+		return
+	}
+
+	remoteBody := res.Page.Revision.Body
+	localBody := fileContent(pd.LocalPath)
+
+	if remoteBody == localBody {
+		// do nothing
+		return
+	}
+
+	err = ioutil.WriteFile(pd.LocalPath, []byte(remoteBody), os.ModePerm)
+	return downloaded(true), err
+}
+
+func exists(file string) bool {
+	_, err := os.Stat(file)
+	return err == nil
+}
+
+func (pd PageData) SyncPage() error {
+	var (
+		done interface{}
+		err  error
+	)
+
+	if !exists(pd.LocalPath) {
+		err := ioutil.WriteFile(pd.LocalPath, []byte(pd.Page.Revision.Body), os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	fi, err := os.Stat(pd.LocalPath)
+	if err != nil {
+		return err
+	}
+
+	local := fi.ModTime().UTC()
+	remote := pd.Page.UpdatedAt.UTC()
+
+	switch {
+	case local.After(remote):
+		done, err = pd.upload()
+	case remote.After(local):
+		done, err = pd.download()
+	default:
+	}
+
+	switch done := done.(type) {
+	case uploaded:
+		if done {
+			println("uploaded")
+		}
+	case downloaded:
+		if done {
+			println("downloaded")
+		}
+	}
+
+	return err
 }

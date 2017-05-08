@@ -36,7 +36,8 @@ func new(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	res, err := api.CreatePage(client, p.path, p.body)
+	data := api.PageData{Client: client}
+	res, err := data.CreatePage(p.path, p.body)
 	if err != nil {
 		return err
 	}
@@ -65,7 +66,7 @@ func makeFromEditor() (p page, err error) {
 	// Do not make it a portal page
 	path = strings.TrimSuffix(path, "/")
 
-	f, err := cli.TempFile(filepath.Base(path))
+	f, err := cli.TempFile(filepath.Base(path) + ".md")
 	defer os.Remove(f.Name())
 
 	err = cli.Run(cli.Conf.Core.Editor, f.Name())

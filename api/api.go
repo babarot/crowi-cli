@@ -9,7 +9,7 @@ import (
 )
 
 func CreatePage(cli *crowi.Client, path, body string) (*crowi.Page, error) {
-	s := NewSpinner("Posting")
+	s := NewSpinner("Posting...")
 	s.Start()
 	defer s.Stop()
 

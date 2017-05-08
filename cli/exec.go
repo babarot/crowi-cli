@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bytes"
 	"errors"
 	"io"
 	"os"
@@ -12,34 +11,6 @@ import (
 
 	"github.com/b4b4r07/go-colon"
 )
-
-func Filter(selecter, text string) ([]string, error) {
-	var (
-		selectedLines []string
-		buf           bytes.Buffer
-		err           error
-	)
-	if text == "" {
-		return selectedLines, errors.New("No input")
-	}
-	if selecter == "" {
-		return selectedLines, errors.New("no selectcmd specified")
-	}
-	err = runFilter(selecter, strings.NewReader(text), &buf)
-	if err != nil {
-		return selectedLines, err
-	}
-	if buf.Len() == 0 {
-		return selectedLines, errors.New("no lines selected")
-	}
-	for _, line := range strings.Split(buf.String(), "\n") {
-		if line == "" {
-			continue
-		}
-		selectedLines = append(selectedLines, line)
-	}
-	return selectedLines, nil
-}
 
 func expandPath(s string) string {
 	if len(s) >= 2 && s[0] == '~' && os.IsPathSeparator(s[1]) {

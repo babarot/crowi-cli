@@ -1,11 +1,13 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/b4b4r07/crowi/api" // TODO (spinner)
@@ -19,7 +21,7 @@ type Screen struct {
 }
 
 func NewScreen() (*Screen, error) {
-	s := api.NewSpinner("Fetching")
+	s := api.NewSpinner("Fetching...")
 	s.Start()
 	defer s.Stop()
 
@@ -88,10 +90,25 @@ func (s *Screen) parseLine(line string) *Line {
 }
 
 func (s *Screen) Select() (lines Lines, err error) {
-	selectedLines, err := Filter(Conf.Core.SelectCmd, s.Text)
+	if s.Text == "" {
+		return lines, errors.New("no text to display")
+	}
+	selectcmd := Conf.Core.SelectCmd
+	if selectcmd == "" {
+		return lines, errors.New("no selectcmd specified")
+	}
+
+	var buf bytes.Buffer
+	err = runFilter(selectcmd, strings.NewReader(s.Text), &buf)
 	if err != nil {
 		return
 	}
+
+	if buf.Len() == 0 {
+		return lines, errors.New("no lines selected")
+	}
+
+	selectedLines := strings.Split(buf.String(), "\n")
 	for _, line := range selectedLines {
 		if line == "" {
 			continue
@@ -99,8 +116,10 @@ func (s *Screen) Select() (lines Lines, err error) {
 		parsedLine := s.parseLine(line)
 		lines = append(lines, *parsedLine)
 	}
+
 	if len(lines) == 0 {
 		return lines, errors.New("no lines selected")
 	}
+
 	return
 }

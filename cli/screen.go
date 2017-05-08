@@ -49,7 +49,6 @@ func NewScreen() (*Screen, error) {
 		return &Screen{}, errors.New(res.Error)
 	}
 
-	// TODO: map ?
 	text := ""
 	for _, pi := range res.Pages {
 		text += fmt.Sprintf("%s\n", pi.Path)

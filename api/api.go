@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"time"
@@ -9,13 +10,13 @@ import (
 	"github.com/crowi/go-crowi"
 )
 
-type PageData struct {
-	Page      crowi.PageInfo
+type Page struct {
+	Info      crowi.PageInfo
 	LocalPath string
 	Client    *crowi.Client
 }
 
-func (pd PageData) CreatePage(path, body string) (*crowi.Page, error) {
+func (page Page) Create(path, body string) (*crowi.Page, error) {
 	s := NewSpinner("Posting...")
 	s.Start()
 	defer s.Stop()
@@ -23,7 +24,7 @@ func (pd PageData) CreatePage(path, body string) (*crowi.Page, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	return pd.Client.Pages.Create(ctx, path, body)
+	return page.Client.Pages.Create(ctx, path, body)
 }
 
 func fileContent(fname string) string {
@@ -34,12 +35,7 @@ func fileContent(fname string) string {
 	return string(data)
 }
 
-type (
-	uploaded   bool
-	downloaded bool
-)
-
-func (pd PageData) upload() (done uploaded, err error) {
+func (page Page) upload() (res *crowi.Page, err error) {
 	s := NewSpinner("Uploading...")
 	s.Start()
 	defer s.Stop()
@@ -47,24 +43,24 @@ func (pd PageData) upload() (done uploaded, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	res, err := pd.Client.Pages.Get(ctx, pd.Page.Path)
+	res, err = page.Client.Pages.Get(ctx, page.Info.Path)
 	if err != nil {
 		return
 	}
 
 	remoteBody := res.Page.Revision.Body
-	localBody := fileContent(pd.LocalPath)
+	localBody := fileContent(page.LocalPath)
 
 	if remoteBody == localBody {
 		// do nothing
-		return
+		return &crowi.Page{}, nil
 	}
 
-	_, err = pd.Client.Pages.Update(ctx, pd.Page.ID, localBody)
-	return uploaded(true), err
+	res, err = page.Client.Pages.Update(ctx, page.Info.ID, localBody)
+	return
 }
 
-func (pd PageData) download() (done downloaded, err error) {
+func (page Page) download() (res *crowi.Page, err error) {
 	s := NewSpinner("Downloading...")
 	s.Start()
 	defer s.Stop()
@@ -72,21 +68,21 @@ func (pd PageData) download() (done downloaded, err error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
 	defer cancel()
 
-	res, err := pd.Client.Pages.Get(ctx, pd.Page.Path)
+	res, err = page.Client.Pages.Get(ctx, page.Info.Path)
 	if err != nil {
 		return
 	}
 
 	remoteBody := res.Page.Revision.Body
-	localBody := fileContent(pd.LocalPath)
+	localBody := fileContent(page.LocalPath)
 
 	if remoteBody == localBody {
 		// do nothing
-		return
+		return &crowi.Page{}, nil
 	}
 
-	err = ioutil.WriteFile(pd.LocalPath, []byte(remoteBody), os.ModePerm)
-	return downloaded(true), err
+	err = ioutil.WriteFile(page.LocalPath, []byte(remoteBody), os.ModePerm)
+	return
 }
 
 func exists(file string) bool {
@@ -94,43 +90,35 @@ func exists(file string) bool {
 	return err == nil
 }
 
-func (pd PageData) SyncPage() error {
-	var (
-		done interface{}
-		err  error
-	)
+func (page Page) Sync() (err error) {
+	var res *crowi.Page
 
-	if !exists(pd.LocalPath) {
-		err := ioutil.WriteFile(pd.LocalPath, []byte(pd.Page.Revision.Body), os.ModePerm)
+	if !exists(page.LocalPath) {
+		err = ioutil.WriteFile(page.LocalPath, []byte(page.Info.Revision.Body), os.ModePerm)
 		if err != nil {
 			return err
 		}
 	}
-	fi, err := os.Stat(pd.LocalPath)
+	fi, err := os.Stat(page.LocalPath)
 	if err != nil {
 		return err
 	}
 
 	local := fi.ModTime().UTC()
-	remote := pd.Page.UpdatedAt.UTC()
+	remote := page.Info.UpdatedAt.UTC()
 
 	switch {
 	case local.After(remote):
-		done, err = pd.upload()
+		res, err = page.upload()
+		if res.OK {
+			fmt.Printf("Uploaded %s\n", res.Page.Path)
+		}
 	case remote.After(local):
-		done, err = pd.download()
+		res, err = page.download()
+		if res.OK {
+			fmt.Printf("Downloaded %s\n", res.Page.Path)
+		}
 	default:
-	}
-
-	switch done := done.(type) {
-	case uploaded:
-		if done {
-			println("uploaded")
-		}
-	case downloaded:
-		if done {
-			println("downloaded")
-		}
 	}
 
 	return err

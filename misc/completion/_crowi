@@ -1,0 +1,37 @@
+#compdef crowi
+# URL: https://github.com/b4b4r07/crowi
+# vim: ft=zsh
+
+_crowi () {
+    local -a _1st_arguments
+    _1st_arguments=(
+    'open:Open a page'
+    'edit:Edit a page'
+    'new:Create a new page'
+    'config:Config the setting file'
+    'help:Show help for any command'
+    )
+
+    _arguments \
+        '(--help)--help[Show the help message]' \
+        '(-v --version)'{-v,--version}'[Show the version and exit]' \
+        '*:: :->subcmds' \
+        && return 0
+
+    if (( CURRENT == 1 )); then
+        _describe -t commands "gist subcommand" _1st_arguments
+        return
+    fi
+
+    case "$words[1]" in
+        (open) ;;
+        (edit) ;;
+        (new) ;;
+        (config) ;;
+        (help)
+            _values 'help message' ${_1st_arguments[@]%:*} && return 0
+            ;;
+    esac
+}
+
+_crowi "$@"

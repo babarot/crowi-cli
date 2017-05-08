@@ -7,8 +7,8 @@ import (
 
 var openCmd = &cobra.Command{
 	Use:   "open",
-	Short: "Open a crowi page",
-	Long:  "Open a crowi page",
+	Short: "Open a page",
+	Long:  "Open a page",
 	RunE:  open,
 }
 

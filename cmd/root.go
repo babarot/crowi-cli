@@ -10,7 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const Version = "0.1.2"
+const Version = "0.0.1"
 
 var showVersion bool
 
@@ -39,7 +39,7 @@ func Execute() {
 
 func init() {
 	initConf()
-	RootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "show the version and exit")
+	RootCmd.Flags().BoolVarP(&showVersion, "version", "v", false, "Show the version and exit")
 }
 
 func initConf() {

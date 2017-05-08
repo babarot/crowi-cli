@@ -19,7 +19,7 @@ func GetClient() (*crowi.Client, error) {
 func EditPage(res *crowi.Pages, line Line) error {
 	var (
 		err  error
-		page crowi.PageInfo
+		info crowi.PageInfo
 	)
 
 	client, err := GetClient()
@@ -29,18 +29,18 @@ func EditPage(res *crowi.Pages, line Line) error {
 
 	for _, pageInfo := range res.Pages {
 		if pageInfo.ID == line.ID {
-			page = pageInfo
+			info = pageInfo
 		}
 	}
 
-	data := api.PageData{
-		Page:      page,
+	page := api.Page{
+		Info:      info,
 		LocalPath: line.LocalPath,
 		Client:    client,
 	}
 
 	// sync before editing
-	err = data.SyncPage()
+	err = page.Sync()
 	if err != nil {
 		return err
 	}
@@ -54,5 +54,5 @@ func EditPage(res *crowi.Pages, line Line) error {
 	}
 
 	// sync after editing
-	return data.SyncPage()
+	return page.Sync()
 }

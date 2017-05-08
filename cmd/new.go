@@ -36,8 +36,8 @@ func new(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	data := api.PageData{Client: client}
-	res, err := data.CreatePage(p.path, p.body)
+	page := api.Page{Client: client}
+	res, err := page.Create(p.path, p.body)
 	if err != nil {
 		return err
 	}

@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -9,7 +8,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 
 	"github.com/b4b4r07/crowi/cli"
@@ -53,10 +51,6 @@ $(function() {
 		blackfriday.EXTENSION_SPACE_HEADERS
 )
 
-var (
-	addr = flag.String("http", ":8000", "HTTP service address (e.g., ':8000')")
-)
-
 var liveCmd = &cobra.Command{
 	Use:   "live",
 	Short: "Preview local pages as html",
@@ -65,10 +59,7 @@ var liveCmd = &cobra.Command{
 }
 
 func live(cmd *cobra.Command, args []string) error {
-	runtime.GOMAXPROCS(runtime.NumCPU())
-	flag.Parse()
 	cwd := cli.Conf.Crowi.LocalPath
-
 	lrs := livereload.New("crowi")
 	defer lrs.Close()
 
@@ -156,15 +147,17 @@ func live(cmd *cobra.Command, args []string) error {
 		w.Write([]byte(fmt.Sprintf(template, name, string(b))))
 	})
 
+	addr := ":8000"
+
 	server := &http.Server{
-		Addr: *addr,
+		Addr: addr,
 		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.URL.RequestURI())
 			http.DefaultServeMux.ServeHTTP(w, r)
 		}),
 	}
 
-	browser.OpenURL("http://localhost" + *addr)
+	browser.OpenURL("http://localhost" + addr)
 	log.Fatal(server.ListenAndServe())
 
 	return nil

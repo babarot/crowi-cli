@@ -11,6 +11,7 @@ import (
 	"strings"
 
 	"github.com/b4b4r07/crowi/cli"
+	"github.com/b4b4r07/go-portscanner"
 	"github.com/omeid/livereload"
 	"github.com/pkg/browser"
 	"github.com/russross/blackfriday"
@@ -147,7 +148,7 @@ func live(cmd *cobra.Command, args []string) error {
 		w.Write([]byte(fmt.Sprintf(template, name, string(b))))
 	})
 
-	addr := ":8000"
+	addr := portscanner.GetWith(8000).Addr()
 
 	server := &http.Server{
 		Addr: addr,

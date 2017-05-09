@@ -21,22 +21,18 @@ var newCmd = &cobra.Command{
 	RunE:  new,
 }
 
-type page struct {
-	path, body string
-}
-
 func new(cmd *cobra.Command, args []string) error {
 	p, err := makeFromEditor()
 	if err != nil {
 		return err
 	}
 
-	client, err := cli.GetClient()
+	client, err := cli.NewClient()
 	if err != nil {
 		return err
 	}
 
-	page := api.Page{Client: client}
+	page := api.NewPage(client)
 	res, err := page.Create(p.path, p.body)
 	if err != nil {
 		return err
@@ -46,8 +42,13 @@ func new(cmd *cobra.Command, args []string) error {
 		return errors.New(res.Error)
 	}
 
-	cli.Underline("Created", res.Page.ID)
-	return nil
+	return cli.Underline("Created", res.Page.ID)
+}
+
+// Constituent elements of the page that is not yet made
+// (the page to be made from now)
+type page struct {
+	path, body string
 }
 
 func makeFromEditor() (p page, err error) {

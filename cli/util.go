@@ -84,10 +84,14 @@ func TempFile(filename string) (*os.File, error) {
 	return os.Create(filepath.Join(os.TempDir(), filename))
 }
 
-func Underline(message, target string) {
-	if message == "" || target == "" {
-		return
+func Underline(message, target string) error {
+	if message == "" {
+		return nil
+	}
+	if target == "" {
+		return errors.New("target is empty")
 	}
 	link := color.New(color.Underline).SprintFunc()
 	fmt.Printf("%s %s\n", message, link(target))
+	return nil
 }

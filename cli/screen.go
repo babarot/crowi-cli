@@ -8,7 +8,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/b4b4r07/crowi/api" // TODO (spinner)
 	"github.com/crowi/go-crowi"
@@ -27,18 +26,18 @@ func NewScreen() (*Screen, error) {
 	s.Start()
 	defer s.Stop()
 
-	client, err := GetClient()
-	if err != nil {
-		return &Screen{}, err
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
-	defer cancel()
-
 	user := Conf.Crowi.User
 	if user == "" {
 		return &Screen{}, errors.New("user is not defined")
 	}
+
+	client, err := NewClient()
+	if err != nil {
+		return &Screen{}, err
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), api.Timeout)
+	defer cancel()
 
 	res, err := client.Pages.List(ctx, "", user, &crowi.PagesListOptions{
 		crowi.ListOptions{Pagenation: Conf.Crowi.Paging},
@@ -83,7 +82,7 @@ type Lines []Line
 
 func (s *Screen) parseLine(line string) *Line {
 	return &Line{
-		Path:      line,
+		Path:      line, // for now
 		URL:       path.Join(Conf.Crowi.BaseURL, line),
 		ID:        s.ID(line),
 		LocalPath: filepath.Join(Conf.Crowi.LocalPath, s.ID(line)+Extention),
@@ -92,11 +91,13 @@ func (s *Screen) parseLine(line string) *Line {
 
 func (s *Screen) Select() (lines Lines, err error) {
 	if s.Text == "" {
-		return lines, errors.New("no text to display")
+		err = errors.New("no text to display")
+		return
 	}
 	selectcmd := Conf.Core.SelectCmd
 	if selectcmd == "" {
-		return lines, errors.New("no selectcmd specified")
+		err = errors.New("no selectcmd specified")
+		return
 	}
 
 	var buf bytes.Buffer
@@ -106,7 +107,8 @@ func (s *Screen) Select() (lines Lines, err error) {
 	}
 
 	if buf.Len() == 0 {
-		return lines, errors.New("no lines selected")
+		err = errors.New("no lines selected")
+		return
 	}
 
 	selectedLines := strings.Split(buf.String(), "\n")
@@ -119,7 +121,8 @@ func (s *Screen) Select() (lines Lines, err error) {
 	}
 
 	if len(lines) == 0 {
-		return lines, errors.New("no lines selected")
+		err = errors.New("no lines selected")
+		return
 	}
 
 	return

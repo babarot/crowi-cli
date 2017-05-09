@@ -10,10 +10,25 @@ import (
 	"github.com/crowi/go-crowi"
 )
 
+var (
+	Timeout time.Duration = 3 * time.Second
+)
+
 type Page struct {
 	Info      crowi.PageInfo
 	LocalPath string
 	Client    *crowi.Client
+}
+
+func NewPage(client *crowi.Client) *Page {
+	if client == nil {
+		client = &crowi.Client{}
+	}
+	return &Page{
+		Info:      crowi.PageInfo{},
+		LocalPath: "",
+		Client:    client,
+	}
 }
 
 func (page Page) Create(path, body string) (*crowi.Page, error) {
@@ -21,18 +36,18 @@ func (page Page) Create(path, body string) (*crowi.Page, error) {
 	s.Start()
 	defer s.Stop()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
 	defer cancel()
 
 	return page.Client.Pages.Create(ctx, path, body)
 }
 
-func fileContent(fname string) string {
-	data, err := ioutil.ReadFile(fname)
+func fileContent(file string) (string, error) {
+	content, err := ioutil.ReadFile(file)
 	if err != nil {
-		panic(err)
+		return "", err
 	}
-	return string(data)
+	return string(content), nil
 }
 
 func (page Page) upload() (res *crowi.Page, err error) {
@@ -40,7 +55,7 @@ func (page Page) upload() (res *crowi.Page, err error) {
 	s.Start()
 	defer s.Stop()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
 	defer cancel()
 
 	res, err = page.Client.Pages.Get(ctx, page.Info.Path)
@@ -49,7 +64,10 @@ func (page Page) upload() (res *crowi.Page, err error) {
 	}
 
 	remoteBody := res.Page.Revision.Body
-	localBody := fileContent(page.LocalPath)
+	localBody, err := fileContent(page.LocalPath)
+	if err != nil {
+		return
+	}
 
 	if remoteBody == localBody {
 		// do nothing
@@ -65,7 +83,7 @@ func (page Page) download() (res *crowi.Page, err error) {
 	s.Start()
 	defer s.Stop()
 
-	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), Timeout)
 	defer cancel()
 
 	res, err = page.Client.Pages.Get(ctx, page.Info.Path)
@@ -74,7 +92,10 @@ func (page Page) download() (res *crowi.Page, err error) {
 	}
 
 	remoteBody := res.Page.Revision.Body
-	localBody := fileContent(page.LocalPath)
+	localBody, err := fileContent(page.LocalPath)
+	if err != nil {
+		return
+	}
 
 	if remoteBody == localBody {
 		// do nothing

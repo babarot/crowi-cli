@@ -7,7 +7,7 @@ import (
 	"github.com/crowi/go-crowi"
 )
 
-func GetClient() (*crowi.Client, error) {
+func NewClient() (*crowi.Client, error) {
 	return crowi.NewClient(
 		crowi.Config{
 			URL:                Conf.Crowi.BaseURL,
@@ -22,7 +22,7 @@ func EditPage(res *crowi.Pages, line Line) error {
 		info crowi.PageInfo
 	)
 
-	client, err := GetClient()
+	client, err := NewClient()
 	if err != nil {
 		return err
 	}

@@ -12,6 +12,17 @@ _crowi () {
     'help:Show help for any command'
     )
 
+    # completions for user-defined commands
+    local p desc
+    for p in ${^path}/crowi-*(N-.)
+    do
+        desc=
+        desc="$(grep -E "^# Desc(ription)?: ?" "$p")"
+        regexp-replace desc "^.*[Dd]esc(ription)?: ?" ""
+        desc="[User-defined] ${desc:-"No description."}"
+        _1st_arguments+=("${p:t:gs:crowi-:}:$desc")
+    done
+
     _arguments \
         '(--help)--help[Show the help message]' \
         '(-v --version)'{-v,--version}'[Show the version and exit]' \

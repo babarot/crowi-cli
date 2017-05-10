@@ -11,8 +11,8 @@ install: build
 	install -m 755 ./bin/crowi ~/bin/crowi
 
 deps:
-	# go get github.com/golang/dep/...
-	# dep ensure
+	go get -d -v ./...
+	echo $(DEPS) | xargs -n1 go get -d
 
 test: deps
 	go test $(TEST) $(TESTARGS) -timeout=3s -parallel=4

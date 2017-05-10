@@ -8,6 +8,7 @@ _crowi () {
     'open:Open a page'
     'edit:Edit a page'
     'new:Create a new page'
+    'live:Preview local pages as html'
     'config:Config the setting file'
     'help:Show help for any command'
     )
@@ -38,6 +39,7 @@ _crowi () {
         (open) ;;
         (edit) ;;
         (new) ;;
+        (live) ;;
         (config) ;;
         (help)
             _values 'help message' ${_1st_arguments[@]%:*} && return 0

@@ -2,9 +2,12 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -17,14 +20,39 @@ import (
 var newCmd = &cobra.Command{
 	Use:   "new [FILE/DIR]",
 	Short: "Create a new page",
-	Long:  `Create a new page`,
+	Long:  `Create a new page. if no args are given, write a page with editor`,
 	RunE:  new,
 }
 
+var (
+	re      = regexp.MustCompile(`!\[.*?\]\((.+?)\)`)
+	urlSafe = strings.NewReplacer(
+		`^`, `-`, // for Crowi's regexp
+		`$`, `-`,
+		`*`, ``,
+		`%`, ``, // query
+		`?`, ``,
+		`.`, `_`,
+	)
+)
+
 func new(cmd *cobra.Command, args []string) error {
-	p, err := makeFromEditor()
+	var (
+		pages []page
+		err   error
+	)
+	switch {
+	case len(args) == 0:
+		pages, err = makeFromEditor()
+	case len(args) > 0:
+		pages, err = makeFromArgs(args)
+	}
 	if err != nil {
 		return err
+	}
+
+	if len(pages) == 0 {
+		return errors.New("no pages")
 	}
 
 	client, err := cli.NewClient()
@@ -32,17 +60,49 @@ func new(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	page := api.NewPage(client)
-	res, err := page.Create(p.path, p.body)
-	if err != nil {
-		return err
+	apipage := api.NewPage(client)
+
+	// create pages
+	for _, page := range pages {
+		res, err := apipage.Create(page.path, page.body)
+		if err != nil {
+			log.Printf("[ERROR] %v", err.Error())
+			continue
+		}
+		if !res.OK {
+			log.Printf("[ERROR] %v", res.Error)
+			continue
+		}
+		cli.Underline("Created", res.Page.ID)
+		// Attachments
+		if re.MatchString(page.body) {
+			var (
+				find = re.FindAllStringSubmatch(page.body, -1)
+				file = find[0][1]
+				id   = res.Page.ID
+				body = page.body
+			)
+			if _, err := os.Stat(file); err == nil {
+				apipage.Attach(id, file)
+				images, err := apipage.Images(id)
+				if err != nil {
+					continue
+				}
+				// get attachments URLs and replace body with these
+				for _, image := range images.Attachments {
+					if image.OriginalName == filepath.Base(file) {
+						body = re.ReplaceAllString(body, fmt.Sprintf("![](%s)", image.URL))
+					}
+				}
+				// update if changed
+				if body != page.body {
+					apipage.Update(id, body)
+				}
+			}
+		}
 	}
 
-	if !res.OK {
-		return errors.New(res.Error)
-	}
-
-	return cli.Underline("Created", res.Page.ID)
+	return nil
 }
 
 // Constituent elements of the page that is not yet made
@@ -51,10 +111,10 @@ type page struct {
 	path, body string
 }
 
-func makeFromEditor() (p page, err error) {
+func makeFromEditor() (pages []page, err error) {
 	user := cli.Conf.Crowi.User
 	if user == "" {
-		return p, errors.New("config user not defined")
+		return pages, errors.New("config user not defined")
 	}
 	cli.ScanDefaultString = path.Join(
 		"/user", user, "memo", time.Now().Format("2006/01/02"),
@@ -65,7 +125,7 @@ func makeFromEditor() (p page, err error) {
 		return
 	}
 	if !filepath.HasPrefix(path, "/") {
-		return page{}, errors.New("path: it must start with a slash")
+		return pages, errors.New("path: it must start with a slash")
 	}
 	// Do not make it a portal page
 	path = strings.TrimSuffix(path, "/")
@@ -75,17 +135,76 @@ func makeFromEditor() (p page, err error) {
 
 	editor := cli.Conf.Core.Editor
 	if editor == "" {
-		return p, errors.New("config editor not defined")
+		return pages, errors.New("config editor not defined")
 	}
 	err = cli.Run(editor, f.Name())
 	if err != nil {
 		return
 	}
 
-	return page{
+	return []page{page{
 		path: path,
 		body: cli.FileContent(f.Name()),
-	}, nil
+	}}, nil
+}
+
+func makeFromArgs(args []string) (pages []page, err error) {
+	var (
+		mdfiles []string
+	)
+
+	isdir := func(path string) bool {
+		if stat, err := os.Stat(path); err == nil && stat.IsDir() {
+			return true
+		}
+		return false
+	}
+
+	for _, arg := range args {
+		// if the arg is dir, walk within the dir and add them to slice
+		// otherwise (regular file), just add it to slice
+		if isdir(arg) {
+			err = filepath.Walk(arg, func(arg string, info os.FileInfo, err error) error {
+				// skip like .git
+				if strings.HasPrefix(arg, ".") {
+					return nil
+				}
+				if info.IsDir() {
+					return nil
+				}
+				switch filepath.Ext(arg) {
+				case ".md", ".mkd", ".markdown":
+					mdfiles = append(mdfiles, arg)
+				}
+				return nil
+			})
+			if err != nil {
+				return
+			}
+		} else {
+			mdfiles = append(mdfiles, arg)
+		}
+	}
+
+	if len(mdfiles) == 0 {
+		return pages, errors.New("no markdown files")
+	}
+
+	for _, file := range mdfiles {
+		file, _ = filepath.Abs(file)
+		pagepath := strings.TrimRight(file[len(os.Getenv("HOME")):], filepath.Ext(file))
+		cli.ScanDefaultString = filepath.Join("/user", cli.Conf.Crowi.User, pagepath)
+		pagepath, err = cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
+		if err != nil {
+			return pages, err
+		}
+		pages = append(pages, page{
+			path: urlSafe.Replace(pagepath),
+			body: cli.FileContent(file),
+		})
+	}
+
+	return pages, err
 }
 
 func init() {

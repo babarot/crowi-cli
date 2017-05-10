@@ -144,3 +144,15 @@ func (page Page) Sync() (err error) {
 
 	return err
 }
+
+func (page Page) Attach(id, file string) (*crowi.Attachment, error) {
+	return page.Client.Attachments.Add(context.Background(), id, file)
+}
+
+func (page Page) Images(id string) (*crowi.Attachments, error) {
+	return page.Client.Attachments.List(context.Background(), id)
+}
+
+func (page Page) Update(id, body string) (res *crowi.Page, err error) {
+	return page.Client.Pages.Update(context.Background(), id, body)
+}

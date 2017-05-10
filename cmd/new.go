@@ -116,22 +116,34 @@ func makeFromEditor() (pages []page, err error) {
 	if user == "" {
 		return pages, errors.New("config user not defined")
 	}
-	cli.ScanDefaultString = path.Join(
-		"/user", user, "memo", time.Now().Format("2006/01/02"),
-	) + "/"
+	defaultPath := path.Join("/user", user, "memo", time.Now().Format("2006/01/02"))
+	cli.ScanDefaultString = defaultPath + "/"
 
-	path, err := cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
+	pagepath, err := cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
 	if err != nil {
 		return
 	}
-	if !filepath.HasPrefix(path, "/") {
+	if !filepath.HasPrefix(pagepath, "/") {
 		return pages, errors.New("path: it must start with a slash")
 	}
 	// Do not make it a portal page
-	path = strings.TrimSuffix(path, "/")
+	pagepath = strings.TrimSuffix(pagepath, "/")
 
-	f, err := cli.TempFile(filepath.Base(path) + cli.Extention)
+	f, err := cli.TempFile(filepath.Base(pagepath) + cli.Extention)
 	defer os.Remove(f.Name())
+
+	var content []byte
+	switch pagepath {
+	case defaultPath:
+		// no changed
+		content = []byte(fmt.Sprintf("# %s", path.Join("memo", time.Now().Format("2006/01/02"))))
+	default:
+		content = []byte(fmt.Sprintf("# %s", path.Base(pagepath)))
+	}
+
+	// write content and ignore error if occured
+	f.Write(content)
+	f.Sync()
 
 	editor := cli.Conf.Core.Editor
 	if editor == "" {
@@ -143,7 +155,7 @@ func makeFromEditor() (pages []page, err error) {
 	}
 
 	return []page{page{
-		path: path,
+		path: pagepath,
 		body: cli.FileContent(f.Name()),
 	}}, nil
 }

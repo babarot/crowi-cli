@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 
 	"github.com/b4b4r07/crowi/cli"
 	"github.com/pelletier/go-toml"
@@ -16,16 +18,31 @@ var confCmd = &cobra.Command{
 	RunE:  conf,
 }
 
+var (
+	confGetKey  string
+	confAllKeys bool
+)
+
 func conf(cmd *cobra.Command, args []string) error {
+	tomlfile := cli.Conf.Core.TomlFile
+	if tomlfile == "" {
+		dir, _ := cli.GetDefaultDir()
+		tomlfile = filepath.Join(dir, "config.toml")
+	}
+
+	config, err := toml.LoadFile(tomlfile)
+	if err != nil {
+		return err
+	}
+
+	if confAllKeys {
+		allMap := config.ToMap()
+		for _, key := range config.Keys() {
+			fmt.Println(strings.Join(findKey(allMap, key), "\n"))
+		}
+		return nil
+	}
 	if confGetKey != "" {
-		dir, err := cli.GetDefaultDir()
-		if err != nil {
-			return err
-		}
-		config, err := toml.LoadFile(filepath.Join(dir, "config.toml"))
-		if err != nil {
-			return err
-		}
 		value := config.Get(confGetKey)
 		if value != nil {
 			fmt.Printf("%v\n", value)
@@ -35,17 +52,32 @@ func conf(cmd *cobra.Command, args []string) error {
 	}
 
 	editor := cli.Conf.Core.Editor
-	tomlfile := cli.Conf.Core.TomlFile
-	if tomlfile == "" {
-		dir, _ := cli.GetDefaultDir()
-		tomlfile = filepath.Join(dir, "config.toml")
+	if editor == "" {
+		return errors.New("config editor not defined")
 	}
 	return cli.Run(editor, tomlfile)
 }
 
-var confGetKey string
+func findKey(m map[string]interface{}, k string) []string {
+	var ret []string
+	originKey := k
+	if v, ok := m[k]; ok {
+		switch v.(type) {
+		case map[string]interface{}:
+			m = v.(map[string]interface{})
+		default:
+		}
+	} else {
+		return []string{}
+	}
+	for k, _ := range m {
+		ret = append(ret, originKey+"."+k)
+	}
+	return ret
+}
 
 func init() {
 	RootCmd.AddCommand(confCmd)
 	confCmd.Flags().StringVarP(&confGetKey, "get", "", "", "Get the config value")
+	confCmd.Flags().BoolVarP(&confAllKeys, "keys", "", false, "Get the config keys")
 }

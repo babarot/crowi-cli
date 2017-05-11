@@ -36,16 +36,38 @@ _crowi () {
     fi
 
     case "$words[1]" in
-        (open) ;;
-        (edit) ;;
-        (new) ;;
-        (live) ;;
-        (config)
-           _arguments \
-                '(- :)'{-h,--help}'[Show this help and exit]' \
-                '(--get)--get[Get the config value]' \
+        (open)
+            _arguments \
+                '(- :)--help[Show this help and exit]' \
+                && return 0
+            ;;
+        (edit)
+            _arguments \
+                '(- :)--help[Show this help and exit]' \
+                && return 0
+            ;;
+        (new)
+            _arguments \
+                '(- :)--help[Show this help and exit]' \
                 '(-)*: :_files' \
                 && return 0
+            ;;
+        (live)
+            _arguments \
+                '(- :)--help[Show this help and exit]' \
+                && return 0
+           ;;
+        (config)
+            keys=( $(crowi config --keys) )
+            _arguments \
+                '(- :)--help[Show this help and exit]' \
+                '(--get)--get[Get the config value]: :->keys' \
+                '(--keys)--keys[Get the config keys]'
+            case "$state" in
+                (keys)
+                    _describe -t keys 'toml keys' keys && return 0
+                    ;;
+            esac
             ;;
         (help)
             _values 'help message' ${_1st_arguments[@]%:*} && return 0

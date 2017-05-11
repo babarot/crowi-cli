@@ -54,7 +54,7 @@ func Scan(message string, allowEmpty bool) (string, error) {
 			line, err = l.ReadlineWithDefault(ScanDefaultString)
 		}
 		if err == readline.ErrInterrupt {
-			if len(line) == 0 {
+			if len(line) <= len(ScanDefaultString) {
 				break
 			} else {
 				continue

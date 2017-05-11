@@ -116,7 +116,8 @@ func makeFromEditor() (pages []page, err error) {
 	if user == "" {
 		return pages, errors.New("config user not defined")
 	}
-	defaultPath := path.Join("/user", user, "memo", time.Now().Format("2006/01/02"))
+	date := time.Now().Format("2006/01/02")
+	defaultPath := path.Join("/user", user, "memo", date)
 	cli.ScanDefaultString = defaultPath + "/"
 
 	pagepath, err := cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
@@ -133,11 +134,13 @@ func makeFromEditor() (pages []page, err error) {
 	defer os.Remove(f.Name())
 
 	var content []byte
-	switch pagepath {
-	case defaultPath:
-		// no changed
-		content = []byte(fmt.Sprintf("# %s", path.Join("memo", time.Now().Format("2006/01/02"))))
-	default:
+	if strings.HasSuffix(defaultPath, date) {
+		content = []byte(fmt.Sprintf("# %s",
+			filepath.Join(
+				filepath.Base(pagepath[0:len(pagepath)-len(date)]),
+				date,
+			)))
+	} else {
 		content = []byte(fmt.Sprintf("# %s", path.Base(pagepath)))
 	}
 
@@ -154,9 +157,14 @@ func makeFromEditor() (pages []page, err error) {
 		return
 	}
 
+	body := cli.FileContent(f.Name())
+	if body == "" || body == string(content) {
+		return pages, errors.New("no content")
+	}
+
 	return []page{page{
-		path: pagepath,
-		body: cli.FileContent(f.Name()),
+		path: urlSafe.Replace(pagepath),
+		body: body,
 	}}, nil
 }
 

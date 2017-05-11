@@ -40,7 +40,13 @@ _crowi () {
         (edit) ;;
         (new) ;;
         (live) ;;
-        (config) ;;
+        (config)
+           _arguments \
+                '(- :)'{-h,--help}'[Show this help and exit]' \
+                '(--get)--get[Get the config value]' \
+                '(-)*: :_files' \
+                && return 0
+            ;;
         (help)
             _values 'help message' ${_1st_arguments[@]%:*} && return 0
             ;;

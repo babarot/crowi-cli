@@ -10,8 +10,8 @@ import (
 )
 
 type Config struct {
-	Core  CoreConfig
-	Crowi CrowiConfig
+	Core  CoreConfig  `toml:"core"`
+	Crowi CrowiConfig `toml:"crowi"`
 }
 
 type CoreConfig struct {

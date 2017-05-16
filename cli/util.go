@@ -26,10 +26,9 @@ func OpenURL(target string) error {
 
 var (
 	ScanDefaultString string
-	ScanAllowEmpty    bool
 )
 
-func Scan(message string, allowEmpty bool) (string, error) {
+func Scan(message string) (string, error) {
 	tmp := "/tmp"
 	if runtime.GOOS == "windows" {
 		tmp = os.Getenv("TEMP")
@@ -64,7 +63,7 @@ func Scan(message string, allowEmpty bool) (string, error) {
 		}
 
 		line = strings.TrimSpace(line)
-		if line == "" && allowEmpty {
+		if line == "" {
 			continue
 		}
 		return line, nil

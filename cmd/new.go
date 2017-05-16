@@ -25,8 +25,8 @@ var newCmd = &cobra.Command{
 }
 
 var (
-	re      = regexp.MustCompile(`!\[.*?\]\((.+?)\)`)
-	urlSafe = strings.NewReplacer(
+	imageURL = regexp.MustCompile(`!\[.*?\]\((.+?)\)`)
+	urlSafe  = strings.NewReplacer(
 		`^`, `-`, // for Crowi's regexp
 		`$`, `-`,
 		`*`, ``,
@@ -34,6 +34,7 @@ var (
 		`?`, ``,
 		`.`, `_`,
 	)
+	datePath = regexp.MustCompile(`^/.*/(.*?/\d{4}/\d{2}/\d{2})$`)
 )
 
 func new(cmd *cobra.Command, args []string) error {
@@ -75,9 +76,9 @@ func new(cmd *cobra.Command, args []string) error {
 		}
 		cli.Underline("Created", res.Page.ID)
 		// Attachments
-		if re.MatchString(page.body) {
+		if imageURL.MatchString(page.body) {
 			var (
-				find = re.FindAllStringSubmatch(page.body, -1)
+				find = imageURL.FindAllStringSubmatch(page.body, -1)
 				file = find[0][1]
 				id   = res.Page.ID
 				body = page.body
@@ -91,7 +92,7 @@ func new(cmd *cobra.Command, args []string) error {
 				// get attachments URLs and replace body with these
 				for _, image := range images.Attachments {
 					if image.OriginalName == filepath.Base(file) {
-						body = re.ReplaceAllString(body, fmt.Sprintf("![](%s)", image.URL))
+						body = imageURL.ReplaceAllString(body, fmt.Sprintf("![](%s)", image.URL))
 					}
 				}
 				// update if changed
@@ -120,7 +121,7 @@ func makeFromEditor() (pages []page, err error) {
 	defaultPath := path.Join("/user", user, "memo", date)
 	cli.ScanDefaultString = defaultPath + "/"
 
-	pagepath, err := cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
+	pagepath, err := cli.Scan(color.YellowString("Path> "))
 	if err != nil {
 		return
 	}
@@ -134,14 +135,12 @@ func makeFromEditor() (pages []page, err error) {
 	defer os.Remove(f.Name())
 
 	var content []byte
-	if strings.HasSuffix(defaultPath, date) {
-		content = []byte(fmt.Sprintf("# %s",
-			filepath.Join(
-				filepath.Base(pagepath[0:len(pagepath)-len(date)]),
-				date,
-			)))
-	} else {
+	matched := datePath.FindStringSubmatch(pagepath)
+	if len(matched) == 0 {
 		content = []byte(fmt.Sprintf("# %s", path.Base(pagepath)))
+	} else {
+		// matched
+		content = []byte(fmt.Sprintf("# %s", matched[1]))
 	}
 
 	// write content and ignore error if occured
@@ -159,10 +158,10 @@ func makeFromEditor() (pages []page, err error) {
 
 	body := cli.FileContent(f.Name())
 	if body == "" || body == string(content) {
-		return pages, errors.New("no content")
+		return pages, errors.New("did nothing due to no contents")
 	}
 
-	return []page{page{
+	return []page{{
 		path: urlSafe.Replace(pagepath),
 		body: body,
 	}}, nil
@@ -214,7 +213,7 @@ func makeFromArgs(args []string) (pages []page, err error) {
 		file, _ = filepath.Abs(file)
 		pagepath := strings.TrimRight(file[len(os.Getenv("HOME")):], filepath.Ext(file))
 		cli.ScanDefaultString = filepath.Join("/user", cli.Conf.Crowi.User, pagepath)
-		pagepath, err = cli.Scan(color.YellowString("Path> "), !cli.ScanAllowEmpty)
+		pagepath, err = cli.Scan(color.YellowString("Path> "))
 		if err != nil {
 			return pages, err
 		}

@@ -77,7 +77,7 @@ func (cfg *Config) LoadFile(file string) error {
 
 	cfg.Core.Editor = os.Getenv("EDITOR")
 	cfg.Core.TomlFile = file
-	cfg.Core.SelectCmd = "fzf"
+	cfg.Core.SelectCmd = "fzf-tmux --reverse:fzf --reverse:peco:fzy"
 	cfg.Crowi.Token = os.Getenv("CROWI_ACCESS_TOKEN")
 	cfg.Crowi.BaseURL = "https://wiki.your.domain"
 	cfg.Crowi.User = os.Getenv("USER")

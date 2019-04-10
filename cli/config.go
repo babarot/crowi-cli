@@ -26,6 +26,7 @@ type CrowiConfig struct {
 	User      string `toml:"user"`
 	LocalPath string `toml:"local_path"`
 	Paging    bool   `toml:"paging"`
+	PageName  string `toml:"page_name"`
 }
 
 var Conf Config
@@ -82,6 +83,7 @@ func (cfg *Config) LoadFile(file string) error {
 	cfg.Crowi.BaseURL = "https://wiki.your.domain"
 	cfg.Crowi.User = os.Getenv("USER")
 	cfg.Crowi.LocalPath = filepath.Join(dir, "pages")
+	cfg.Crowi.PageName = "memo"
 
 	os.MkdirAll(cfg.Crowi.LocalPath, 0700)
 

@@ -118,7 +118,7 @@ func makeFromEditor() (pages []page, err error) {
 		return pages, errors.New("config user not defined")
 	}
 	date := time.Now().Format("2006/01/02")
-	defaultPath := path.Join("/user", user, "memo", date)
+	defaultPath := path.Join("/user", user, cli.Conf.Crowi.PageName, date)
 	cli.ScanDefaultString = defaultPath + "/"
 
 	pagepath, err := cli.Scan(color.YellowString("Path> "))

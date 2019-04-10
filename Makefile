@@ -1,22 +1,18 @@
-TEST?= $(shell go list ./... | grep -v vendor)
-DEPS = $(shell go list -f '{{range .TestImports}}{{.}} {{end}}' ./...)
+.DEFAULT_GOAL := help
 
-all: build
+.PHONY: all
+all:
 
-build: deps
-	mkdir -p bin
-	go build -o bin/crowi
+.PHONY: build
+build: ## Build for local environment
+	@go build
 
-install: build
-	install -m 755 ./bin/crowi ~/bin/crowi
+.PHONY: release
+release: ## Build for multiple OSs, packaging it and upload to GitHub Release
+	@VERSION_DIR=cmd bash <(wget -o /dev/null -qO - https://git.io/release-go)
 
-deps:
-	go get -d -v ./...
-	echo $(DEPS) | xargs -n1 go get -d
-
-test: deps
-	go test $(TEST) $(TESTARGS) -timeout=3s -parallel=4
-	go vet $(TEST)
-	go test $(TEST) -race
-
-.PHONY: all build deps test
+.PHONY: help
+help: ## Self-documented Makefile
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
+		| sort \
+		| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
